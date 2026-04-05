@@ -1,128 +1,197 @@
 # Cislunar Viewer
 
-Production-minded Artemis II mission viewer built as a monorepo with reusable mission math, offline mission artifacts, a SPICE-first ingest boundary, validated data loading, and a polished Next.js 3D UI.
+Artemis-II-only mission viewer focused on following the planned Artemis II crewed lunar flyby.
 
-## Monorepo layout
+This repo does **not** try to become a generic multi-mission catalog. Phase 3 keeps the product centered on **Artemis II only** and improves the parts that matter for that mission:
+
+- a clearer **SPICE/Horizons hybrid** data path
+- better **latest-state honesty**
+- richer **mission-phase explainability**
+- stronger **3D scene context** for Artemis II events and closest approach
+
+## What Phase 3 changes
+
+### Better Artemis II fidelity
+
+- Artemis II remains the sole mission bundle and sole product story.
+- Earth/Moon geometry still follows the repo's **SPICE-first kernel contract** in `data/spice/artemis-ii/kernel-manifest.json`.
+- Moon state vectors are still sampled from **JPL Horizons** and written into versioned offline artifacts.
+- The trajectory now carries an explicit **Artemis II mission profile**:
+  - coverage window
+  - phase windows
+  - closest-approach estimate
+  - clearer approximation notes
+
+### Better latest-state / replay behavior
+
+- `latest-state.json` now reports how far the current wall clock is from the nearest generated sample.
+- The UI exposes that sample age directly so “latest” is not mistaken for live mission telemetry.
+- Replay and latest-state modes are both framed as **Artemis II timeline views**, not separate products.
+
+### Better visualization / explainability
+
+- The dashboard now shows:
+  - active Artemis II phase
+  - sample age
+  - cadence
+  - closest-approach estimate
+  - explicit “still approximate” notes
+- The 3D scene marks the estimated **closest approach** point on the Artemis II path.
+- Event jumps, Moon motion, and Earth-Moon spacing stay tied to the active Artemis II sample.
+
+## Repo layout
 
 ```text
 apps/
-  web/                 # Next.js app shell, scene, controls, telemetry
+  web/                 # Next.js Artemis II viewer
 packages/
-  mission-engine/      # interpolation, telemetry derivation, event helpers
-  space-data/          # mission bundle loading + artifact validation
-  spice-bridge/        # SPICE kernel manifest + body/frame reference helpers
+  mission-engine/      # interpolation, telemetry derivation, phase helpers
+  space-data/          # validated Artemis II bundle loading
+  spice-bridge/        # SPICE kernel manifest + body/frame helpers
   ui/                  # shared UI primitives
 data/
   missions/
     artemis-ii/        # trajectory, events, latest-state, media
   spice/
-    artemis-ii/        # SPICE kernel manifest for reproducible offline ingest
+    artemis-ii/        # NAIF kernel manifest for reproducible offline ingest
 scripts/
   sync-artemis-ii.mjs
   validate-mission-data.mjs
   validate-spice-manifest.mjs
 ```
 
-## Phase 2 highlights
+## Truth model: what is real vs hybrid vs approximate
 
-- **SPICE-first architecture:** Artemis II now carries a NAIF kernel manifest boundary for Earth/Moon geometry, frame metadata, and reproducible offline ingest.
-- **More honest data contract:** trajectory source metadata now says exactly what is SPICE-oriented, what is bridged through Horizons, and what remains modeled.
-- **More interactive 3D viewer:** the Moon now moves with the active sample, the camera modes actually retarget the scene, and the trail reveals mission progress instead of showing only a static full path.
-- **Timeline-linked scene:** event cards jump the replay to the relevant sample, and the scene overlays the active event context.
-- **Fidelity surfaced in UI:** the dashboard exposes SPICE kernel coverage and explicit approximation notes instead of implying full mission truth.
+### Real / externally sourced
 
-## What is real vs hybrid vs approximate now
+- **Moon vectors** come from **JPL Horizons**.
+- **Kernel references** come from public **NAIF generic kernels** listed in the Artemis II manifest.
+- Those sources are used **offline** to generate versioned artifacts committed in the repo.
 
-### SPICE-backed / SPICE-oriented
+### Hybrid
 
-- **Kernel selection and frame contract** now live in `data/spice/artemis-ii/kernel-manifest.json` and `@cislunar/spice-bridge`.
-- The kernel manifest tracks the exact NAIF generic kernels intended for:
-  - leap seconds (`naif0012.tls`)
-  - planetary constants (`pck00011.tpc`)
-  - planetary ephemerides (`de440s.bsp`)
-  - lunar orientation (`moon_pa_de440_200625.bpc`)
-  - lunar frame specs (`moon_de440_220930.tf`)
-- **Earth/Moon body geometry and frame metadata** in the app now flow through that SPICE-oriented layer instead of being implied by ad hoc constants alone.
-
-### Real external data, sampled offline
-
-- **Moon state vectors in `trajectory.json`** still come from **JPL Horizons** (`COMMAND='301'`, vectors relative to Earth, ICRF, 2-hour cadence).
-- This is now treated explicitly as a **bridge around the SPICE kernel contract**: the kernel set defines what authoritative geometry stack we align to, while the current offline sampler uses Horizons to produce browser-friendly artifacts.
-- **`latest-state.json`** is generated from wall clock time by snapping to the nearest trajectory sample.
-
-### Hybrid / modeled
-
-- **Artemis II / Orion spacecraft positions remain a proxy path.** Public, mission-specific Artemis II spacecraft SPK coverage is not bundled here, so the trajectory is still modeled against the mission timeline and real Moon geometry.
-- The proxy is now documented as such in both the data artifacts and the UI.
+- **Artemis II / Orion spacecraft positions** are still a mission-shaped proxy.
+- The viewer aligns that proxy to the Artemis II timeline while using real sampled Moon geometry.
+- This keeps the repo useful now without pretending public Artemis II spacecraft SPKs are already bundled.
 
 ### Still approximate
 
-- The **viewer is visually stylized**. Body textures, lighting, attitude, and spacecraft orientation are not flight-grade.
-- The **Moon is position-faithful within the sampled dataset**, but the viewer is not yet rendering full SPICE attitude/orientation products or sub-observer geometry.
-- **Artemis II event timing and media** are still curated timeline artifacts, not direct mission telemetry feeds.
+- Orion is **not** running on released Artemis II spacecraft ephemeris yet.
+- “Latest state” is **nearest-sample latest**, not live telemetry.
+- Attitude, lighting, comms blackout geometry, and re-entry dynamics remain explanatory/stylized.
 
-So the repo is no longer hand-wavy about “realism”: Earth/Moon geometry has a SPICE-first home, the browser gets reproducible offline artifacts, and the Orion path is still honestly labeled hybrid.
+## Run locally
 
-## Data model
-
-Artifacts live in `data/missions/artemis-ii/`:
-
-- `trajectory.json`: hybrid trajectory samples in kilometers, including sampled Moon vectors plus modeled Orion positions
-- `events.json`: narrative, burn, milestone, and media timeline events
-- `latest-state.json`: generated latest pointer for live mode
-- `media.json`: timeline-linked media markers
-
-SPICE ingest metadata lives in `data/spice/artemis-ii/`:
-
-- `kernel-manifest.json`: the NAIF kernel contract for Artemis II Earth/Moon geometry and reference frames
-
-The browser never calls JPL or NAIF directly. External sources are used offline to generate or validate versionable artifacts.
-
-## Getting started
+Minimal-friction path:
 
 ```bash
 pnpm install
 pnpm sync:data
 pnpm validate:data
 pnpm validate:spice
-pnpm test
 pnpm --filter web dev
 ```
 
-Open `http://localhost:3000`.
+Then open:
 
-## Quality gates
+- `http://localhost:3000`
 
-- `pnpm sync:data`
-- `pnpm validate:data`
-- `pnpm validate:spice`
+### What each command does
+
+- `pnpm install` — installs workspace deps
+- `pnpm sync:data` — regenerates Artemis II trajectory + latest-state + embedded data module
+- `pnpm validate:data` — validates the Artemis II mission artifacts
+- `pnpm validate:spice` — checks the tracked NAIF kernel URLs/manifest
+- `pnpm --filter web dev` — starts the Next.js app
+
+## Validate / test locally
+
+Use these checks before committing:
+
+```bash
+pnpm sync:data
+pnpm validate:data
+pnpm validate:spice
+pnpm test
+pnpm build
+```
+
+What they cover:
+
 - `pnpm test`
+  - mission math / interpolation tests
+  - data loading + schema tests
+  - web UI smoke test
 - `pnpm build`
+  - full workspace production build
 
-## Architecture notes
+If you only want the web test loop:
 
-- `@cislunar/mission-engine` owns interpolation and telemetry math.
-- `@cislunar/space-data` validates and serves mission bundles.
-- `@cislunar/spice-bridge` owns the SPICE kernel manifest and body/frame references.
-- `@cislunar/ui` exposes shared design primitives.
-- `apps/web` focuses on presentation, controls, and scene orchestration.
-- `scripts/sync-artemis-ii.mjs` is the offline ingestion step that queries Horizons and regenerates the Artemis II artifacts with SPICE-oriented source metadata.
-- `scripts/validate-spice-manifest.mjs` verifies the tracked NAIF kernel URLs still resolve.
+```bash
+pnpm --filter web test
+```
 
-## Current Artemis II truth model
+## Deploy to Vercel
 
-1. **Earth/Moon geometry**: SPICE-first kernel manifest + offline sampled Moon vectors.
-2. **Spacecraft trajectory**: hybrid Artemis II proxy trajectory shaped against mission phases.
-3. **Events**: curated mission narrative timeline.
-4. **Latest state**: wall-clock pointer into the generated trajectory.
-5. **Media**: static cards linked to timeline events.
+This repo deploys cleanly as a monorepo Next.js app.
 
-That split still feels sane. Phase 2 improves realism without pretending Artemis II spacecraft ephemeris is already public and turnkey.
+### Option A: Vercel dashboard
 
-## Next steps
+1. Import `pedroid999/cislunar-viewer` into Vercel.
+2. Set the **Root Directory** to:
+   - `apps/web`
+3. Keep the framework as:
+   - **Next.js**
+4. Override the install command to:
+   - `cd ../.. && pnpm install`
+5. Override the build command to:
+   - `cd ../.. && pnpm sync:data && pnpm build`
+6. Output directory:
+   - leave default for Next.js
 
-1. Replace the modeled Orion proxy with mission-specific spacecraft state vectors when public Artemis II kernels exist, or add a historically complete cislunar mission alongside Artemis II to prove the full stack.
-2. Move from a Horizons bridge to direct SPICE sampling in the ingest path once a toolkit/runtime choice is locked in for the repo.
-3. Add lunar attitude/orientation products to the scene so the Moon is not only translated but also frame-aware.
-4. Add mission catalog APIs and per-mission ingest configs.
-5. Add richer event-to-scene annotations such as closest-approach markers and Earth re-entry framing.
+Because the mission artifacts are generated inside the repo, running `pnpm sync:data` during build ensures the Artemis II bundle and embedded module are up to date.
+
+### Option B: `vercel` CLI
+
+From the repo root:
+
+```bash
+pnpm install
+pnpm sync:data
+vercel
+```
+
+For production:
+
+```bash
+vercel --prod
+```
+
+When prompted, point Vercel at `apps/web` as the app root.
+
+## Useful commands
+
+```bash
+pnpm sync:data
+pnpm validate:data
+pnpm validate:spice
+pnpm test
+pnpm build
+pnpm --filter web dev
+```
+
+## Current Artemis II architecture
+
+1. **SPICE contract** — NAIF kernel manifest for Artemis II Earth/Moon geometry and frames
+2. **Horizons bridge** — offline sampled Moon vectors aligned to that contract
+3. **Hybrid Orion path** — Artemis II-only mission-shaped proxy trajectory
+4. **Latest-state pointer** — wall-clock snap to nearest sample with freshness metadata
+5. **UI explainability layer** — phase, cadence, sample age, event context, approximation notes
+
+## What still remains approximate
+
+- Mission-specific Artemis II spacecraft SPKs are not bundled here.
+- Closest approach is an estimate derived from the hybrid path, not authoritative flight dynamics.
+- The viewer is still a stylized 3D explainer, not a flight-certified simulator.
+
+If public Artemis II spacecraft kernels become available later, the next honest upgrade is to swap the Orion proxy for mission-specific state vectors while keeping the product focused on **Artemis II**.

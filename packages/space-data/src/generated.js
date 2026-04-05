@@ -8,9 +8,53 @@ export const trajectory = {
     "time": "iso8601"
   },
   "spacecraft": "Orion",
+  "missionProfile": {
+    "mission": "Artemis II",
+    "focus": "Single-mission viewer for the Artemis II crewed lunar flyby.",
+    "coverage": {
+      "start": "2026-04-01T12:00:00Z",
+      "closestApproach": "2026-04-10T12:00:00Z",
+      "end": "2026-04-13T12:00:00Z",
+      "cadence": "2 h"
+    },
+    "phases": [
+      {
+        "id": "earth-departure",
+        "label": "Earth departure",
+        "description": "Launch through translunar injection and initial outbound shaping.",
+        "start": "2026-04-01T12:00:00Z",
+        "end": "2026-04-02T18:00:00Z"
+      },
+      {
+        "id": "outbound-coast",
+        "label": "Outbound translunar coast",
+        "description": "Orion is tracking away from Earth on the way to the lunar flyby.",
+        "start": "2026-04-02T18:00:00Z",
+        "end": "2026-04-10T12:00:00Z"
+      },
+      {
+        "id": "return-coast",
+        "label": "Return coast",
+        "description": "Free-return arc back toward Earth after closest approach.",
+        "start": "2026-04-10T12:00:00Z",
+        "end": "2026-04-12T12:00:00Z"
+      },
+      {
+        "id": "earth-return",
+        "label": "Earth return",
+        "description": "Final Earth approach and splashdown sequence.",
+        "start": "2026-04-12T12:00:00Z",
+        "end": "2026-04-13T12:00:00Z"
+      }
+    ],
+    "closestApproachEstimate": {
+      "timestamp": "2026-04-11T04:00:00Z",
+      "distanceToMoonKm": 47610.951
+    }
+  },
   "source": {
     "kind": "hybrid-spice-horizons",
-    "generatedAt": "2026-04-05T11:17:41.426Z",
+    "generatedAt": "2026-04-05T11:36:18.780Z",
     "horizons": {
       "target": "301",
       "center": "500@399",
@@ -36,10 +80,15 @@ export const trajectory = {
     },
     "fidelity": {
       "earthMoonGeometry": "SPICE-oriented kernel manifest with Horizons-sampled Moon vectors in an Earth-centered ICRF-compatible frame.",
-      "spacecraftEphemeris": "Modeled Artemis II / Orion proxy path shaped against the timeline because public mission spacecraft SPK coverage is not bundled here.",
-      "viewerScene": "Moon motion now follows the sampled geometry, but body rendering remains a stylized visualization rather than a photoreal or attitude-true simulation."
+      "spacecraftEphemeris": "Modeled Artemis II / Orion proxy path shaped against the Artemis II free-return timeline because public mission spacecraft SPK coverage is not bundled here.",
+      "viewerScene": "Moon motion, Earth-Moon range, event targeting, and closest-approach context now follow the sampled dataset, but body rendering remains stylized rather than attitude-true."
     },
-    "description": "Moon geometry follows a SPICE-first kernel selection and is sampled offline through a reproducible Horizons bridge. Orion trajectory remains a maintainable proxy shaped from the Artemis II mission timeline because public spacecraft state vectors are not bundled here."
+    "approximationNotes": [
+      "Orion state vectors are still a mission-shaped proxy rather than released Artemis II spacecraft ephemeris.",
+      "Latest mode snaps wall clock time to the nearest generated sample, so it is cadence-limited rather than telemetry-live.",
+      "Attitude, lighting, re-entry dynamics, and communications geometry are explanatory visualization layers, not flight dynamics products."
+    ],
+    "description": "Moon geometry follows a SPICE-first kernel selection and is sampled offline through a reproducible Horizons bridge. Orion trajectory remains an Artemis II-only proxy shaped from the crewed free-return timeline because public spacecraft state vectors are not bundled here."
   },
   "bodyCenters": {
     "earth": [
@@ -2014,10 +2063,12 @@ export const latest_state = {
   "sampleIndex": 48,
   "mode": "latest",
   "summary": "Orion is on the outbound translunar coast, using a modeled path against real Moon ephemerides.",
+  "nearestSampleOffsetMinutes": 24,
+  "cadenceHours": 2,
   "source": {
     "kind": "generated",
-    "generatedAt": "2026-04-05T11:17:41.426Z",
-    "description": "Latest-state is computed from the generated trajectory by snapping the current wall clock to the nearest sample."
+    "generatedAt": "2026-04-05T11:36:18.781Z",
+    "description": "Latest-state is computed from the generated Artemis II trajectory by snapping the current wall clock to the nearest sample."
   }
 };
 
@@ -2039,4 +2090,13 @@ export const media = {
       "url": "https://images-assets.nasa.gov/image/as11-44-6551/as11-44-6551~orig.jpg"
     }
   ]
+};
+
+export const missionCatalog = {
+  "artemis-ii": {
+    trajectory,
+    events,
+    latest_state,
+    media
+  }
 };

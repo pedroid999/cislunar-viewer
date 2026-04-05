@@ -13,9 +13,10 @@ describe('space data', () => {
 
   it('validates data artifacts and derives mission state', () => {
     const validated = validateMissionData();
-    expect(validated.latestState.mode).toBe('latest');
-    const state = deriveMissionState(validated.latestState.asOf);
+    expect(validated.latest_state.mode).toBe('latest');
+    const state = deriveMissionState('artemis-ii', validated.latest_state.asOf);
     expect(state.distanceToEarthKm).toBeGreaterThan(50000);
+    expect(state.timestamp).toBeTruthy();
     expect(state.nextEvent?.id).toBeTruthy();
   });
 });

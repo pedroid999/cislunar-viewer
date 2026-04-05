@@ -70,6 +70,14 @@ function buildTrajectory(moonSamples, spiceManifest) {
     };
   });
 
+  const closestSample = samples.reduce((best, sample) => {
+    const distanceToMoonKm = magnitude(subtract(sample.positionKm, sample.moonPositionKm));
+    if (!best || distanceToMoonKm < best.distanceToMoonKm) {
+      return { timestamp: sample.timestamp, distanceToMoonKm: round3(distanceToMoonKm) };
+    }
+    return best;
+  }, null);
+
   return {
     missionId,
     frame: 'earth-centered-icrf',
@@ -78,6 +86,18 @@ function buildTrajectory(moonSamples, spiceManifest) {
       time: 'iso8601'
     },
     spacecraft: 'Orion',
+    missionProfile: {
+      mission: 'Artemis II',
+      focus: 'Single-mission viewer for the Artemis II crewed lunar flyby.',
+      coverage: {
+        start: startTime,
+        closestApproach: closestApproachTime,
+        end: endTime,
+        cadence: stepSize
+      },
+      phases: buildMissionPhases(),
+      closestApproachEstimate: closestSample
+    },
     source: {
       kind: 'hybrid-spice-horizons',
       generatedAt: new Date().toISOString(),
@@ -96,10 +116,15 @@ function buildTrajectory(moonSamples, spiceManifest) {
       },
       fidelity: {
         earthMoonGeometry: 'SPICE-oriented kernel manifest with Horizons-sampled Moon vectors in an Earth-centered ICRF-compatible frame.',
-        spacecraftEphemeris: 'Modeled Artemis II / Orion proxy path shaped against the timeline because public mission spacecraft SPK coverage is not bundled here.',
-        viewerScene: 'Moon motion now follows the sampled geometry, but body rendering remains a stylized visualization rather than a photoreal or attitude-true simulation.'
+        spacecraftEphemeris: 'Modeled Artemis II / Orion proxy path shaped against the Artemis II free-return timeline because public mission spacecraft SPK coverage is not bundled here.',
+        viewerScene: 'Moon motion, Earth-Moon range, event targeting, and closest-approach context now follow the sampled dataset, but body rendering remains stylized rather than attitude-true.'
       },
-      description: 'Moon geometry follows a SPICE-first kernel selection and is sampled offline through a reproducible Horizons bridge. Orion trajectory remains a maintainable proxy shaped from the Artemis II mission timeline because public spacecraft state vectors are not bundled here.'
+      approximationNotes: [
+        'Orion state vectors are still a mission-shaped proxy rather than released Artemis II spacecraft ephemeris.',
+        'Latest mode snaps wall clock time to the nearest generated sample, so it is cadence-limited rather than telemetry-live.',
+        'Attitude, lighting, re-entry dynamics, and communications geometry are explanatory visualization layers, not flight dynamics products.'
+      ],
+      description: 'Moon geometry follows a SPICE-first kernel selection and is sampled offline through a reproducible Horizons bridge. Orion trajectory remains an Artemis II-only proxy shaped from the crewed free-return timeline because public spacecraft state vectors are not bundled here.'
     },
     bodyCenters: {
       earth: [0, 0, 0],
@@ -129,10 +154,12 @@ function buildLatestState(trajectory) {
     sampleIndex,
     mode: 'latest',
     summary: phase,
+    nearestSampleOffsetMinutes: Math.round(bestDistance / 60000),
+    cadenceHours: Number(stepSize.replace(/\s*h/i, '')),
     source: {
       kind: 'generated',
       generatedAt: new Date().toISOString(),
-      description: 'Latest-state is computed from the generated trajectory by snapping the current wall clock to the nearest sample.'
+      description: 'Latest-state is computed from the generated Artemis II trajectory by snapping the current wall clock to the nearest sample.'
     }
   };
 }
@@ -159,6 +186,39 @@ function missionProgress(timestamp) {
     return easeInOut((t - launch) / (closest - launch)) * 0.5;
   }
   return 0.5 + easeInOut((t - closest) / (splashdown - closest)) * 0.5;
+}
+
+function buildMissionPhases() {
+  return [
+    {
+      id: 'earth-departure',
+      label: 'Earth departure',
+      description: 'Launch through translunar injection and initial outbound shaping.',
+      start: startTime,
+      end: '2026-04-02T18:00:00Z'
+    },
+    {
+      id: 'outbound-coast',
+      label: 'Outbound translunar coast',
+      description: 'Orion is tracking away from Earth on the way to the lunar flyby.',
+      start: '2026-04-02T18:00:00Z',
+      end: closestApproachTime
+    },
+    {
+      id: 'return-coast',
+      label: 'Return coast',
+      description: 'Free-return arc back toward Earth after closest approach.',
+      start: closestApproachTime,
+      end: '2026-04-12T12:00:00Z'
+    },
+    {
+      id: 'earth-return',
+      label: 'Earth return',
+      description: 'Final Earth approach and splashdown sequence.',
+      start: '2026-04-12T12:00:00Z',
+      end: endTime
+    }
+  ];
 }
 
 function progressToRadial(progress) {
@@ -247,6 +307,10 @@ function add([ax, ay, az], [bx, by, bz]) {
   return [ax + bx, ay + by, az + bz];
 }
 
+function subtract([ax, ay, az], [bx, by, bz]) {
+  return [ax - bx, ay - by, az - bz];
+}
+
 function scale([x, y, z], factor) {
   return [x * factor, y * factor, z * factor];
 }
@@ -273,7 +337,7 @@ async function writeJson(fileName, data) {
 
 function renderGeneratedModule(data, format = 'ts') {
   const suffix = format === 'ts' ? ' as const' : '';
-  return `// Auto-generated from data/missions/artemis-ii JSON artifacts.\n\nexport const trajectory = ${JSON.stringify(data.trajectory, null, 2)}${suffix};\n\nexport const events = ${JSON.stringify(data.events, null, 2)}${suffix};\n\nexport const latest_state = ${JSON.stringify(data.latest_state, null, 2)}${suffix};\n\nexport const media = ${JSON.stringify(data.media, null, 2)}${suffix};\n`;
+  return `// Auto-generated from data/missions/artemis-ii JSON artifacts.\n\nexport const trajectory = ${JSON.stringify(data.trajectory, null, 2)}${suffix};\n\nexport const events = ${JSON.stringify(data.events, null, 2)}${suffix};\n\nexport const latest_state = ${JSON.stringify(data.latest_state, null, 2)}${suffix};\n\nexport const media = ${JSON.stringify(data.media, null, 2)}${suffix};\n\nexport const missionCatalog = {\n  \"artemis-ii\": {\n    trajectory,\n    events,\n    latest_state,\n    media\n  }\n}${suffix};\n`;
 }
 
 main().catch((error) => {

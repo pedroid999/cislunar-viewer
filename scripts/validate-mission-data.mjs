@@ -1,8 +1,8 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const repoRoot = new URL('..', import.meta.url);
-const missionDir = join(repoRoot.pathname, 'data', 'missions', 'artemis-ii');
+const missionsRoot = join(repoRoot.pathname, 'data', 'missions');
 
 const vector3 = (value, name) => {
   if (!Array.isArray(value) || value.length !== 3 || value.some((entry) => typeof entry !== 'number' || Number.isNaN(entry))) {
@@ -21,8 +21,8 @@ function validateSource(source, name) {
   if (source.generatedAt !== undefined) assert(!Number.isNaN(Date.parse(source.generatedAt)), `${name}.source.generatedAt must be ISO-ish.`);
 }
 
-function validateTrajectory(trajectory) {
-  assert(trajectory.missionId === 'artemis-ii', 'trajectory.missionId must be artemis-ii');
+function validateTrajectory(trajectory, missionId) {
+  assert(trajectory.missionId === missionId, `trajectory.missionId must be ${missionId}`);
   assert(typeof trajectory.frame === 'string' && trajectory.frame.length > 0, 'trajectory.frame must be set');
   validateSource(trajectory.source, 'trajectory');
   vector3(trajectory.bodyCenters?.earth, 'trajectory.bodyCenters.earth');
@@ -35,8 +35,8 @@ function validateTrajectory(trajectory) {
   });
 }
 
-function validateEvents(events) {
-  assert(events.missionId === 'artemis-ii', 'events.missionId must be artemis-ii');
+function validateEvents(events, missionId) {
+  assert(events.missionId === missionId, `events.missionId must be ${missionId}`);
   assert(Array.isArray(events.events) && events.events.length > 0, 'events.events must not be empty');
   for (const [index, event] of events.events.entries()) {
     assert(typeof event.id === 'string' && event.id.length > 0, `events.events[${index}].id must be set`);
@@ -44,8 +44,8 @@ function validateEvents(events) {
   }
 }
 
-function validateLatestState(latestState, trajectory) {
-  assert(latestState.missionId === 'artemis-ii', 'latest-state.missionId must be artemis-ii');
+function validateLatestState(latestState, trajectory, missionId) {
+  assert(latestState.missionId === missionId, `latest-state.missionId must be ${missionId}`);
   assert(latestState.mode === 'latest', 'latest-state.mode must be latest');
   assert(Number.isInteger(latestState.sampleIndex), 'latest-state.sampleIndex must be an integer');
   assert(latestState.sampleIndex >= 0 && latestState.sampleIndex < trajectory.samples.length, 'latest-state.sampleIndex out of range');
@@ -53,25 +53,33 @@ function validateLatestState(latestState, trajectory) {
   validateSource(latestState.source, 'latest-state');
 }
 
-function validateMedia(media) {
-  assert(media.missionId === 'artemis-ii', 'media.missionId must be artemis-ii');
+function validateMedia(media, missionId) {
+  assert(media.missionId === missionId, `media.missionId must be ${missionId}`);
   assert(Array.isArray(media.items), 'media.items must be an array');
 }
 
 async function readJson(fileName) {
-  return JSON.parse(await readFile(join(missionDir, fileName), 'utf8'));
+  return JSON.parse(await readFile(fileName, 'utf8'));
 }
 
-const [trajectory, events, latestState, media] = await Promise.all([
-  readJson('trajectory.json'),
-  readJson('events.json'),
-  readJson('latest-state.json'),
-  readJson('media.json')
-]);
+const missionDirs = (await readdir(missionsRoot, { withFileTypes: true }))
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .sort();
 
-validateTrajectory(trajectory);
-validateEvents(events);
-validateLatestState(latestState, trajectory);
-validateMedia(media);
+for (const missionId of missionDirs) {
+  const missionDir = join(missionsRoot, missionId);
+  const [trajectory, events, latestState, media] = await Promise.all([
+    readJson(join(missionDir, 'trajectory.json')),
+    readJson(join(missionDir, 'events.json')),
+    readJson(join(missionDir, 'latest-state.json')),
+    readJson(join(missionDir, 'media.json'))
+  ]);
 
-console.log(`Mission data artifacts validated: ${trajectory.samples.length} samples, ${events.events.length} events.`);
+  validateTrajectory(trajectory, missionId);
+  validateEvents(events, missionId);
+  validateLatestState(latestState, trajectory, missionId);
+  validateMedia(media, missionId);
+
+  console.log(`Validated ${missionId}: ${trajectory.samples.length} samples, ${events.events.length} events.`);
+}

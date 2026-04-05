@@ -67,6 +67,7 @@ export function SceneView({
   current,
   moon,
   currentIndex,
+  closestApproachIndex,
   scaleMode,
   cameraMode,
   highlightedEventLabel
@@ -75,6 +76,7 @@ export function SceneView({
   current: Vector3;
   moon: Vector3;
   currentIndex: number;
+  closestApproachIndex?: number;
   scaleMode: ScaleMode;
   cameraMode: CameraMode;
   highlightedEventLabel?: string;
@@ -84,6 +86,9 @@ export function SceneView({
   const activeTrail = useMemo(() => scaledPoints.slice(0, Math.max(currentIndex + 1, 2)), [scaledPoints, currentIndex]);
   const currentPoint = toScene(current, scale);
   const moonPoint = toScene(moon, scale);
+  const closestApproachPoint = closestApproachIndex !== undefined && closestApproachIndex >= 0 && closestApproachIndex < scaledPoints.length
+    ? scaledPoints[closestApproachIndex]
+    : undefined;
   const earthPoint: Vector3 = [0, 0, 0];
   const guideLine = useMemo(() => new Float32Array([...earthPoint, ...moonPoint]), [moonPoint]);
 
@@ -135,6 +140,16 @@ export function SceneView({
           <meshStandardMaterial color="#f97316" emissive="#fb923c" emissiveIntensity={0.75} />
         </mesh>
         <Label position={[currentPoint[0], currentPoint[1] + 0.8, currentPoint[2]]}>Orion</Label>
+
+        {closestApproachPoint ? (
+          <>
+            <mesh position={closestApproachPoint}>
+              <sphereGeometry args={[0.12, 20, 20]} />
+              <meshStandardMaterial color="#f43f5e" emissive="#fb7185" emissiveIntensity={0.65} />
+            </mesh>
+            <Label position={[closestApproachPoint[0], closestApproachPoint[1] + 0.6, closestApproachPoint[2]]}>Closest approach</Label>
+          </>
+        ) : null}
 
         {highlightedEventLabel ? <Label position={[currentPoint[0], currentPoint[1] - 1, currentPoint[2]]}>{highlightedEventLabel}</Label> : null}
 

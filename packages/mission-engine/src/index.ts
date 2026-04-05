@@ -6,6 +6,14 @@ export interface TrajectorySample {
   moonPositionKm?: Vector3;
 }
 
+export interface MissionPhaseWindow {
+  id: string;
+  label: string;
+  description: string;
+  start: string;
+  end: string;
+}
+
 export interface MissionEvent {
   id: string;
   timestamp: string;
@@ -23,6 +31,10 @@ export interface InterpolatedState {
   distanceToMoonKm: number;
   earthMoonDistanceKm: number;
   missionElapsedSeconds: number;
+  missionProgress: number;
+  nearestSampleIndex: number;
+  nearestSampleOffsetSeconds: number;
+  phase?: MissionPhaseWindow;
   nextEvent?: MissionEvent;
   lightTimeSeconds: number;
 }
@@ -50,12 +62,13 @@ export function sortEvents(events: MissionEvent[]): MissionEvent[] {
   return [...events].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 }
 
-export function interpolateTrajectory(samples: TrajectorySample[], atIso: string): InterpolatedState {
+export function interpolateTrajectory(samples: TrajectorySample[], atIso: string, phases: MissionPhaseWindow[] = []): InterpolatedState {
   if (samples.length < 2) throw new Error('Need at least two samples');
   const target = new Date(atIso).getTime();
   const ordered = [...samples].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   const firstTime = new Date(ordered[0].timestamp).getTime();
-  if (target <= firstTime) return deriveState(ordered[0], ordered[1], target, firstTime);
+  const missionEnd = new Date(ordered.at(-1)!.timestamp).getTime();
+  if (target <= firstTime) return deriveState(ordered[0], ordered[1], target, firstTime, missionEnd, phases);
   for (let i = 0; i < ordered.length - 1; i++) {
     const current = ordered[i];
     const next = ordered[i + 1];
@@ -63,13 +76,13 @@ export function interpolateTrajectory(samples: TrajectorySample[], atIso: string
     const end = new Date(next.timestamp).getTime();
     if (target >= start && target <= end) {
       const t = end === start ? 0 : (target - start) / (end - start);
-      return deriveState(current, next, target, firstTime, t);
+      return deriveState(current, next, target, firstTime, missionEnd, phases, t, i);
     }
   }
-  return deriveState(ordered.at(-2)!, ordered.at(-1)!, target, firstTime, 1);
+  return deriveState(ordered.at(-2)!, ordered.at(-1)!, target, firstTime, missionEnd, phases, 1, ordered.length - 2);
 }
 
-function deriveState(current: TrajectorySample, next: TrajectorySample, target: number, missionStart: number, t = 0): InterpolatedState {
+function deriveState(current: TrajectorySample, next: TrajectorySample, target: number, missionStart: number, missionEnd: number, phases: MissionPhaseWindow[] = [], t = 0, currentIndex = 0): InterpolatedState {
   const currentTime = new Date(current.timestamp).getTime();
   const nextTime = new Date(next.timestamp).getTime();
   const dtSeconds = Math.max((nextTime - currentTime) / 1000, 1);
@@ -81,6 +94,12 @@ function deriveState(current: TrajectorySample, next: TrajectorySample, target: 
     : current.moonPositionKm ?? next.moonPositionKm ?? MOON_POSITION;
   const distanceToEarthKm = magnitude(positionKm);
   const distanceToMoonKm = magnitude(subtract(positionKm, moonPositionKm));
+  const currentDistance = Math.abs(target - currentTime);
+  const nextDistance = Math.abs(nextTime - target);
+  const nearestSampleIndex = nextDistance < currentDistance ? currentIndex + 1 : currentIndex;
+  const nearestSampleOffsetSeconds = Math.round(Math.min(currentDistance, nextDistance) / 1000);
+  const missionElapsedSeconds = Math.max(0, Math.round((target - missionStart) / 1000));
+  const missionDurationSeconds = Math.max(1, Math.round((missionEnd - missionStart) / 1000));
   return {
     timestamp: new Date(target).toISOString(),
     positionKm,
@@ -89,7 +108,11 @@ function deriveState(current: TrajectorySample, next: TrajectorySample, target: 
     distanceToEarthKm,
     distanceToMoonKm,
     earthMoonDistanceKm: magnitude(moonPositionKm),
-    missionElapsedSeconds: Math.max(0, Math.round((target - missionStart) / 1000)),
+    missionElapsedSeconds,
+    missionProgress: Math.min(Math.max(missionElapsedSeconds / missionDurationSeconds, 0), 1),
+    nearestSampleIndex,
+    nearestSampleOffsetSeconds,
+    phase: phaseForTime(phases, target),
     lightTimeSeconds: distanceToEarthKm / LIGHT_SPEED_KM_S
   };
 }
@@ -99,9 +122,19 @@ export function nextEventForTime(events: MissionEvent[], atIso: string): Mission
   return sortEvents(events).find((event) => new Date(event.timestamp).getTime() >= at);
 }
 
+export function phaseForTime(phases: MissionPhaseWindow[], at: number | string): MissionPhaseWindow | undefined {
+  const time = typeof at === 'number' ? at : new Date(at).getTime();
+  return phases.find((phase) => {
+    const start = new Date(phase.start).getTime();
+    const end = new Date(phase.end).getTime();
+    return time >= start && time <= end;
+  });
+}
+
 export function formatDuration(totalSeconds: number): string {
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+  const days = Math.floor(safeSeconds / 86400);
+  const hours = Math.floor((safeSeconds % 86400) / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
   return `${days}d ${hours}h ${minutes}m`;
 }

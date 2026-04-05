@@ -11,7 +11,8 @@ import Page from './page';
 describe('web app', () => {
   it('renders the main mission heading', () => {
     render(<Page />);
-    expect(screen.getByRole('heading', { name: /Crewed lunar flyby replay \+ live state/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Hybrid future mission \+ flown historical ephemeris/i })).toBeTruthy();
+    expect(screen.getByText(/Artemis I:/i)).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Telemetry/i })).toBeTruthy();
   });
 });
