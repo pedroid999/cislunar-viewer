@@ -1,0 +1,12 @@
+{
+  "missionId": "artemis-i",
+  "asOf": "2022-11-21T12:44:00Z",
+  "sampleIndex": 21,
+  "mode": "latest",
+  "summary": "Archive pointer is set to Artemis I closest lunar approach to foreground the flown ephemeris.",
+  "source": {
+    "kind": "generated",
+    "generatedAt": "2026-04-05T11:41:22.780Z",
+    "description": "Historical missions use a curated archive pointer instead of wall-clock live telemetry."
+  }
+}

@@ -13,7 +13,7 @@
     "lint": "turbo run lint",
     "validate:data": "node scripts/validate-mission-data.mjs",
     "validate:spice": "node scripts/validate-spice-manifest.mjs",
-    "sync:data": "node scripts/sync-artemis-ii.mjs"
+    "sync:data": "node scripts/sync-missions.mjs"
   },
   "devDependencies": {
     "turbo": "^2.5.0"

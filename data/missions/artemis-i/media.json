@@ -1,0 +1,12 @@
+{
+  "missionId": "artemis-i",
+  "items": [
+    {
+      "id": "orion-selfie",
+      "eventId": "closest-approach",
+      "title": "Orion outbound selfie",
+      "caption": "Public Artemis I imagery during lunar transit.",
+      "url": "https://images-assets.nasa.gov/image/KSC-20221121-PH-KLS01_0011/KSC-20221121-PH-KLS01_0011~orig.jpg"
+    }
+  ]
+}

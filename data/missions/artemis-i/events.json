@@ -1,0 +1,40 @@
+{
+  "missionId": "artemis-i",
+  "events": [
+    {
+      "id": "launch",
+      "timestamp": "2022-11-16T06:47:44Z",
+      "title": "Launch",
+      "type": "mission",
+      "description": "SLS launches Artemis I from LC-39B."
+    },
+    {
+      "id": "closest-approach",
+      "timestamp": "2022-11-21T12:44:00Z",
+      "title": "Closest lunar approach",
+      "type": "milestone",
+      "description": "Orion passes about 130 km above the Moon."
+    },
+    {
+      "id": "dro-entry",
+      "timestamp": "2022-11-25T20:00:00Z",
+      "title": "Distant retrograde orbit entry",
+      "type": "mission",
+      "description": "Orion settles into distant retrograde orbit."
+    },
+    {
+      "id": "return-flyby",
+      "timestamp": "2022-12-05T16:43:00Z",
+      "title": "Return lunar flyby",
+      "type": "milestone",
+      "description": "Final lunar flyby bends Orion onto Earth return."
+    },
+    {
+      "id": "splashdown",
+      "timestamp": "2022-12-11T17:20:00Z",
+      "title": "Splashdown",
+      "type": "mission",
+      "description": "Artemis I returns to the Pacific."
+    }
+  ]
+}

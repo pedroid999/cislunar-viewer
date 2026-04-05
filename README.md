@@ -1,19 +1,22 @@
 # Cislunar Viewer
 
-Artemis-II-only mission viewer focused on following the planned Artemis II crewed lunar flyby.
+Cislunar mission viewer with two explicitly different truth levels: Artemis II remains the flagship hybrid future mission, and Artemis I now acts as the historically flown higher-fidelity reference mission.
 
-This repo does **not** try to become a generic multi-mission catalog. Phase 3 keeps the product centered on **Artemis II only** and improves the parts that matter for that mission:
+This repo still does **not** try to become an open-ended mission zoo. The point of Phase 3 is narrower and more honest: keep Artemis II as the main story, then add one historical mission with public spacecraft ephemeris support so the stack can prove it handles something materially closer to full-fidelity truth.
 
 - a clearer **SPICE/Horizons hybrid** data path
 - better **latest-state honesty**
 - richer **mission-phase explainability**
 - stronger **3D scene context** for Artemis II events and closest approach
+- a selectable **Artemis I historical dataset** built from public JPL Horizons spacecraft vectors
+- explicit **fidelity comparison** between hybrid and historically flown mission data
 
 ## What Phase 3 changes
 
 ### Better Artemis II fidelity
 
-- Artemis II remains the sole mission bundle and sole product story.
+- Artemis II remains the flagship mission bundle and primary product story.
+- Artemis I is included as the historical truth-reference mission.
 - Earth/Moon geometry still follows the repo's **SPICE-first kernel contract** in `data/spice/artemis-ii/kernel-manifest.json`.
 - Moon state vectors are still sampled from **JPL Horizons** and written into versioned offline artifacts.
 - The trajectory now carries an explicit **Artemis II mission profile**:
@@ -99,8 +102,8 @@ Then open:
 ### What each command does
 
 - `pnpm install` — installs workspace deps
-- `pnpm sync:data` — regenerates Artemis II trajectory + latest-state + embedded data module
-- `pnpm validate:data` — validates the Artemis II mission artifacts
+- `pnpm sync:data` — regenerates Artemis II + Artemis I mission artifacts and the embedded data module
+- `pnpm validate:data` — validates all mission artifacts under `data/missions/`
 - `pnpm validate:spice` — checks the tracked NAIF kernel URLs/manifest
 - `pnpm --filter web dev` — starts the Next.js app
 
@@ -149,7 +152,7 @@ This repo deploys cleanly as a monorepo Next.js app.
 6. Output directory:
    - leave default for Next.js
 
-Because the mission artifacts are generated inside the repo, running `pnpm sync:data` during build ensures the Artemis II bundle and embedded module are up to date.
+Because the mission artifacts are generated inside the repo, running `pnpm sync:data` refreshes both the Artemis II hybrid bundle and the Artemis I historical bundle before rebuilding the embedded module.
 
 ### Option B: `vercel` CLI
 
@@ -194,4 +197,14 @@ pnpm --filter web dev
 - Closest approach is an estimate derived from the hybrid path, not authoritative flight dynamics.
 - The viewer is still a stylized 3D explainer, not a flight-certified simulator.
 
-If public Artemis II spacecraft kernels become available later, the next honest upgrade is to swap the Orion proxy for mission-specific state vectors while keeping the product focused on **Artemis II**.
+## Fidelity comparison
+
+### Artemis II
+- **More real now:** Earth/Moon geometry, timeline coupling, and scene context are tied to the sampled dataset.
+- **Still approximate:** Orion remains a mission-shaped proxy path because public Artemis II spacecraft kernels are not bundled here.
+
+### Artemis I
+- **More real now:** Orion spacecraft vectors come directly from the public JPL Horizons Artemis I target (`-1023`), so the viewer can replay an actually flown cislunar path.
+- **Still approximate:** event annotations and the browser scene are still curated/stylized rather than attitude-true or re-entry-dynamics-true.
+
+If public Artemis II spacecraft kernels become available later, the next honest upgrade is to swap the Orion proxy for mission-specific state vectors while keeping Artemis II as the flagship mission.
