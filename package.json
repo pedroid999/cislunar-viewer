@@ -1,0 +1,19 @@
+{
+  "name": "cislunar-viewer",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "validate:data": "node scripts/validate-mission-data.mjs"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0"
+  }
+}

@@ -1,0 +1,32 @@
+import { describe, expect, it } from 'vitest';
+import { formatDuration, interpolateTrajectory, nextEventForTime, sortEvents, type MissionEvent, type TrajectorySample } from './index';
+
+const samples: TrajectorySample[] = [
+  { timestamp: '2026-04-01T00:00:00Z', positionKm: [0, 0, 0] },
+  { timestamp: '2026-04-01T01:00:00Z', positionKm: [3600, 0, 0] },
+  { timestamp: '2026-04-01T02:00:00Z', positionKm: [7200, 0, 0] }
+];
+
+const events: MissionEvent[] = [
+  { id: 'b', timestamp: '2026-04-01T03:00:00Z', title: 'B', type: 'mission', description: '' },
+  { id: 'a', timestamp: '2026-04-01T01:00:00Z', title: 'A', type: 'burn', description: '' }
+];
+
+describe('mission engine', () => {
+  it('interpolates trajectory and derives telemetry', () => {
+    const state = interpolateTrajectory(samples, '2026-04-01T00:30:00Z');
+    expect(state.positionKm[0]).toBe(1800);
+    expect(Math.round(state.velocityKmS)).toBe(1);
+    expect(state.distanceToEarthKm).toBe(1800);
+    expect(state.distanceToMoonKm).toBeGreaterThan(382000);
+  });
+
+  it('sorts and finds next events', () => {
+    expect(sortEvents(events)[0].id).toBe('a');
+    expect(nextEventForTime(events, '2026-04-01T01:30:00Z')?.id).toBe('b');
+  });
+
+  it('formats duration for telemetry', () => {
+    expect(formatDuration(90061)).toBe('1d 1h 1m');
+  });
+});

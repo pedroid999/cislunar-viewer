@@ -1,0 +1,19 @@
+{
+  "missionId": "artemis-ii",
+  "items": [
+    {
+      "id": "crew-patch",
+      "eventId": "launch",
+      "title": "Artemis II crew patch",
+      "caption": "Crew identity marker for launch sequence.",
+      "url": "https://images-assets.nasa.gov/image/iss063e094106/iss063e094106~orig.jpg"
+    },
+    {
+      "id": "earthrise",
+      "eventId": "closest-approach",
+      "title": "Earthrise concept frame",
+      "caption": "Story marker for far-side pass.",
+      "url": "https://images-assets.nasa.gov/image/as11-44-6551/as11-44-6551~orig.jpg"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "missionId": "artemis-ii",
+  "events": [
+    {
+      "id": "launch",
+      "timestamp": "2026-04-01T12:00:00Z",
+      "title": "Launch",
+      "type": "mission",
+      "description": "SLS Block 1 lifts Artemis II toward parking orbit."
+    },
+    {
+      "id": "tli",
+      "timestamp": "2026-04-02T08:00:00Z",
+      "title": "Trans-lunar injection",
+      "type": "burn",
+      "description": "Upper stage performs the translunar injection burn."
+    },
+    {
+      "id": "earth-departure-photo",
+      "timestamp": "2026-04-03T00:00:00Z",
+      "title": "Blue marble window",
+      "type": "media",
+      "description": "Iconic Earth receding view from Orion.",
+      "media": {
+        "kind": "photo",
+        "credit": "NASA concept art"
+      }
+    },
+    {
+      "id": "midcourse-1",
+      "timestamp": "2026-04-05T04:00:00Z",
+      "title": "Midcourse correction",
+      "type": "burn",
+      "description": "Trim burn refines free-return trajectory."
+    },
+    {
+      "id": "closest-approach",
+      "timestamp": "2026-04-10T12:00:00Z",
+      "title": "Closest lunar approach",
+      "type": "milestone",
+      "description": "Orion sweeps behind the Moon on a crewed lunar flyby."
+    },
+    {
+      "id": "story-burn",
+      "timestamp": "2026-04-11T00:00:00Z",
+      "title": "Story beat: far side blackout",
+      "type": "story",
+      "description": "Mission control temporarily loses direct line of sight as Orion passes behind the Moon."
+    },
+    {
+      "id": "return-arc",
+      "timestamp": "2026-04-11T20:00:00Z",
+      "title": "Return arc established",
+      "type": "mission",
+      "description": "Free-return arc commits the crew to Earth return."
+    },
+    {
+      "id": "splashdown",
+      "timestamp": "2026-04-13T12:00:00Z",
+      "title": "Splashdown",
+      "type": "mission",
+      "description": "Pacific Ocean splashdown and recovery."
+    }
+  ]
+}
