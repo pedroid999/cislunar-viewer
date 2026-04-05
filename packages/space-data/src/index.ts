@@ -3,11 +3,24 @@ import { z } from 'zod';
 import { trajectory, events, latest_state, media } from './generated.js';
 import { interpolateTrajectory, nextEventForTime, sortEvents } from '@cislunar/mission-engine';
 
-const sampleSchema = z.object({ timestamp: z.string(), positionKm: z.tuple([z.number(), z.number(), z.number()]) });
+const vector3Schema = z.tuple([z.number(), z.number(), z.number()]);
+const sourceSchema = z.object({
+  kind: z.string(),
+  generatedAt: z.string().optional(),
+  description: z.string(),
+  horizons: z.object({
+    target: z.string(),
+    center: z.string(),
+    ephemerisType: z.string(),
+    stepSize: z.string(),
+    referenceFrame: z.string()
+  }).optional()
+});
+const sampleSchema = z.object({ timestamp: z.string(), positionKm: vector3Schema, moonPositionKm: vector3Schema.optional() });
 const missionEventSchema = z.object({ id: z.string(), timestamp: z.string(), title: z.string(), type: z.enum(['mission', 'burn', 'milestone', 'media', 'story']), description: z.string() });
-const trajectorySchema = z.object({ missionId: z.string(), frame: z.string(), units: z.object({ distance: z.string(), time: z.string() }), spacecraft: z.string(), bodyCenters: z.object({ earth: z.tuple([z.number(), z.number(), z.number()]), moon: z.tuple([z.number(), z.number(), z.number()]) }), samples: z.array(sampleSchema).min(2) });
+const trajectorySchema = z.object({ missionId: z.string(), frame: z.string(), units: z.object({ distance: z.string(), time: z.string() }), spacecraft: z.string(), source: sourceSchema, bodyCenters: z.object({ earth: vector3Schema, moon: vector3Schema }), samples: z.array(sampleSchema).min(2) });
 const eventsSchema = z.object({ missionId: z.string(), events: z.array(missionEventSchema) });
-const latestStateSchema = z.object({ missionId: z.string(), asOf: z.string(), sampleIndex: z.number().int(), mode: z.literal('latest'), summary: z.string() });
+const latestStateSchema = z.object({ missionId: z.string(), asOf: z.string(), sampleIndex: z.number().int(), mode: z.literal('latest'), summary: z.string(), source: sourceSchema });
 const mediaSchema = z.object({ missionId: z.string(), items: z.array(z.object({ id: z.string(), eventId: z.string(), title: z.string(), caption: z.string(), url: z.string().url() })) });
 
 export const missionTrajectory = trajectorySchema.parse(trajectory);

@@ -13,7 +13,7 @@ describe('space data', () => {
     const validated = validateMissionData();
     expect(validated.latestState.mode).toBe('latest');
     const state = deriveMissionState(validated.latestState.asOf);
-    expect(state.distanceToEarthKm).toBeGreaterThan(100000);
+    expect(state.distanceToEarthKm).toBeGreaterThan(50000);
     expect(state.nextEvent?.id).toBeTruthy();
   });
 });

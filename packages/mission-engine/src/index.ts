@@ -3,6 +3,7 @@ export type Vector3 = [number, number, number];
 export interface TrajectorySample {
   timestamp: string;
   positionKm: Vector3;
+  moonPositionKm?: Vector3;
 }
 
 export interface MissionEvent {
@@ -70,10 +71,14 @@ function deriveState(current: TrajectorySample, next: TrajectorySample, target: 
   const currentTime = new Date(current.timestamp).getTime();
   const nextTime = new Date(next.timestamp).getTime();
   const dtSeconds = Math.max((nextTime - currentTime) / 1000, 1);
-  const positionKm = interpolateVector(current.positionKm, next.positionKm, Math.min(Math.max(t, 0), 1));
+  const clampedT = Math.min(Math.max(t, 0), 1);
+  const positionKm = interpolateVector(current.positionKm, next.positionKm, clampedT);
   const velocityVector = subtract(next.positionKm, current.positionKm).map((v) => v / dtSeconds) as Vector3;
+  const moonPositionKm = current.moonPositionKm && next.moonPositionKm
+    ? interpolateVector(current.moonPositionKm, next.moonPositionKm, clampedT)
+    : current.moonPositionKm ?? next.moonPositionKm ?? MOON_POSITION;
   const distanceToEarthKm = magnitude(positionKm);
-  const distanceToMoonKm = magnitude(subtract(positionKm, MOON_POSITION));
+  const distanceToMoonKm = magnitude(subtract(positionKm, moonPositionKm));
   return {
     timestamp: new Date(target).toISOString(),
     positionKm,

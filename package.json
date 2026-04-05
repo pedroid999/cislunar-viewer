@@ -11,7 +11,8 @@
     "dev": "turbo run dev --parallel",
     "test": "turbo run test",
     "lint": "turbo run lint",
-    "validate:data": "node scripts/validate-mission-data.mjs"
+    "validate:data": "node scripts/validate-mission-data.mjs",
+    "sync:data": "node scripts/sync-artemis-ii.mjs"
   },
   "devDependencies": {
     "turbo": "^2.5.0"
