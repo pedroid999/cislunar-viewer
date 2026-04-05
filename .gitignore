@@ -4,4 +4,3 @@ out
 dist
 coverage
 .turbo
-pnpm-lock.yaml
