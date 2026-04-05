@@ -6,15 +6,15 @@ import { formatDuration } from '@cislunar/mission-engine';
 import { SceneView } from './scene-view';
 import { useViewerStore } from '../lib/store';
 
-const missionLabels = {
+const missionLabels: Record<string, string> = {
   'artemis-ii': 'Artemis II',
   'artemis-i': 'Artemis I'
-} as const;
+};
 
-const missionBlurbs = {
+const missionBlurbs: Record<string, string> = {
   'artemis-ii': 'Flagship hybrid mission: SPICE-oriented Earth/Moon geometry plus a maintainable Orion proxy path.',
   'artemis-i': 'Historical high-fidelity mission: flown Orion vectors sampled directly from the public JPL Horizons Artemis I target.'
-} as const;
+};
 
 export function MissionDashboard() {
   const { missionId, setMissionId, sampleIndex, setSampleIndex, playing, togglePlaying, playbackMode, setPlaybackMode, cameraMode, setCameraMode, scaleMode, setScaleMode } = useViewerStore();
