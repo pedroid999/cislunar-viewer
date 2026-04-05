@@ -2,18 +2,30 @@ import { z } from 'zod';
 // @ts-ignore generated JS module with embedded validated mission data
 import { trajectory, events, latest_state, media } from './generated.js';
 import { interpolateTrajectory, nextEventForTime, sortEvents } from '@cislunar/mission-engine';
+import { getBodyGeometryReference, getSpiceKernelManifest } from '@cislunar/spice-bridge';
 
 const vector3Schema = z.tuple([z.number(), z.number(), z.number()]);
 const sourceSchema = z.object({
   kind: z.string(),
   generatedAt: z.string().optional(),
   description: z.string(),
+  fidelity: z.object({
+    earthMoonGeometry: z.string(),
+    spacecraftEphemeris: z.string(),
+    viewerScene: z.string()
+  }).optional(),
   horizons: z.object({
     target: z.string(),
     center: z.string(),
     ephemerisType: z.string(),
     stepSize: z.string(),
     referenceFrame: z.string()
+  }).optional(),
+  spice: z.object({
+    manifestMissionId: z.string(),
+    kernelIds: z.array(z.string()),
+    frame: z.string(),
+    notes: z.array(z.string())
   }).optional()
 });
 const sampleSchema = z.object({ timestamp: z.string(), positionKm: vector3Schema, moonPositionKm: vector3Schema.optional() });
@@ -37,7 +49,9 @@ export function getMissionBundle(missionId: MissionId = 'artemis-ii') {
     trajectory: missionTrajectory,
     events: sortEvents(missionEvents.events),
     latestState: latestMissionState,
-    media: missionMedia.items
+    media: missionMedia.items,
+    spice: getSpiceKernelManifest(),
+    geometry: getBodyGeometryReference()
   };
 }
 

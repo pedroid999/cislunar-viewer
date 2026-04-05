@@ -1,5 +1,5 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 
 const repoRoot = new URL('..', import.meta.url);
 const missionDir = new URL('../data/missions/artemis-ii/', import.meta.url);
@@ -11,11 +11,13 @@ const startTime = '2026-04-01T12:00:00Z';
 const closestApproachTime = '2026-04-10T12:00:00Z';
 const endTime = '2026-04-13T12:00:00Z';
 const stepSize = '2 h';
+const spiceManifestPath = new URL('../data/spice/artemis-ii/kernel-manifest.json', import.meta.url);
 
 async function main() {
-  const [events, media] = await Promise.all([
+  const [events, media, spiceManifest] = await Promise.all([
     readJson('events.json'),
-    readJson('media.json')
+    readJson('media.json'),
+    readAbsoluteJson(spiceManifestPath)
   ]);
 
   const moonSamples = await fetchHorizonsVectors({
@@ -26,7 +28,7 @@ async function main() {
     stepSize
   });
 
-  const trajectory = buildTrajectory(moonSamples);
+  const trajectory = buildTrajectory(moonSamples, spiceManifest);
   const latestState = buildLatestState(trajectory);
 
   await Promise.all([
@@ -39,7 +41,7 @@ async function main() {
   console.log(`Synced ${missionId} artifacts with ${trajectory.samples.length} trajectory samples.`);
 }
 
-function buildTrajectory(moonSamples) {
+function buildTrajectory(moonSamples, spiceManifest) {
   const samples = moonSamples.map((sample) => {
     const progress = missionProgress(sample.timestamp);
     const moonPositionKm = sample.positionKm;
@@ -77,7 +79,7 @@ function buildTrajectory(moonSamples) {
     },
     spacecraft: 'Orion',
     source: {
-      kind: 'hybrid',
+      kind: 'hybrid-spice-horizons',
       generatedAt: new Date().toISOString(),
       horizons: {
         target: '301',
@@ -86,7 +88,18 @@ function buildTrajectory(moonSamples) {
         stepSize,
         referenceFrame: 'ICRF'
       },
-      description: 'Moon state vectors come from JPL Horizons. Orion trajectory is still a maintainable proxy shaped from the mission timeline because Artemis II spacecraft vectors are not yet available in Horizons.'
+      spice: {
+        manifestMissionId: spiceManifest.missionId,
+        kernelIds: spiceManifest.kernels.map((kernel) => kernel.id),
+        frame: spiceManifest.frame,
+        notes: spiceManifest.notes
+      },
+      fidelity: {
+        earthMoonGeometry: 'SPICE-oriented kernel manifest with Horizons-sampled Moon vectors in an Earth-centered ICRF-compatible frame.',
+        spacecraftEphemeris: 'Modeled Artemis II / Orion proxy path shaped against the timeline because public mission spacecraft SPK coverage is not bundled here.',
+        viewerScene: 'Moon motion now follows the sampled geometry, but body rendering remains a stylized visualization rather than a photoreal or attitude-true simulation.'
+      },
+      description: 'Moon geometry follows a SPICE-first kernel selection and is sampled offline through a reproducible Horizons bridge. Orion trajectory remains a maintainable proxy shaped from the Artemis II mission timeline because public spacecraft state vectors are not bundled here.'
     },
     bodyCenters: {
       earth: [0, 0, 0],
@@ -244,6 +257,11 @@ function round3(value) {
 
 async function readJson(fileName) {
   const content = await readFile(new URL(fileName, missionDir), 'utf8');
+  return JSON.parse(content);
+}
+
+async function readAbsoluteJson(fileUrl) {
+  const content = await readFile(fileUrl, 'utf8');
   return JSON.parse(content);
 }
 

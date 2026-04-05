@@ -1,12 +1,12 @@
 {
   "missionId": "artemis-ii",
-  "asOf": "2026-04-05T10:00:00Z",
-  "sampleIndex": 47,
+  "asOf": "2026-04-05T12:00:00Z",
+  "sampleIndex": 48,
   "mode": "latest",
   "summary": "Orion is on the outbound translunar coast, using a modeled path against real Moon ephemerides.",
   "source": {
     "kind": "generated",
-    "generatedAt": "2026-04-05T10:35:09.622Z",
+    "generatedAt": "2026-04-05T11:17:41.426Z",
     "description": "Latest-state is computed from the generated trajectory by snapping the current wall clock to the nearest sample."
   }
 }

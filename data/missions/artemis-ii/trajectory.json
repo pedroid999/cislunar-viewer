@@ -7,8 +7,8 @@
   },
   "spacecraft": "Orion",
   "source": {
-    "kind": "hybrid",
-    "generatedAt": "2026-04-05T10:35:09.622Z",
+    "kind": "hybrid-spice-horizons",
+    "generatedAt": "2026-04-05T11:17:41.426Z",
     "horizons": {
       "target": "301",
       "center": "500@399",
@@ -16,7 +16,28 @@
       "stepSize": "2 h",
       "referenceFrame": "ICRF"
     },
-    "description": "Moon state vectors come from JPL Horizons. Orion trajectory is still a maintainable proxy shaped from the mission timeline because Artemis II spacecraft vectors are not yet available in Horizons."
+    "spice": {
+      "manifestMissionId": "artemis-ii",
+      "kernelIds": [
+        "naif0012",
+        "pck00011",
+        "de440s",
+        "moon_pa_de440_200625",
+        "moon_de440_220930"
+      ],
+      "frame": "J2000 / ICRF-compatible Earth-centered frame",
+      "notes": [
+        "This manifest is the SPICE-first contract for Artemis II body geometry and frame metadata.",
+        "The repo does not commit large kernel binaries yet; it tracks exact upstream NAIF artifacts and URLs for reproducible offline ingestion.",
+        "Artemis II spacecraft state vectors are still unavailable here, so the spacecraft path remains a documented hybrid model even though Earth/Moon geometry is aligned to NAIF kernel selection."
+      ]
+    },
+    "fidelity": {
+      "earthMoonGeometry": "SPICE-oriented kernel manifest with Horizons-sampled Moon vectors in an Earth-centered ICRF-compatible frame.",
+      "spacecraftEphemeris": "Modeled Artemis II / Orion proxy path shaped against the timeline because public mission spacecraft SPK coverage is not bundled here.",
+      "viewerScene": "Moon motion now follows the sampled geometry, but body rendering remains a stylized visualization rather than a photoreal or attitude-true simulation."
+    },
+    "description": "Moon geometry follows a SPICE-first kernel selection and is sampled offline through a reproducible Horizons bridge. Orion trajectory remains a maintainable proxy shaped from the Artemis II mission timeline because public spacecraft state vectors are not bundled here."
   },
   "bodyCenters": {
     "earth": [

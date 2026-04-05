@@ -18,6 +18,8 @@ describe('mission engine', () => {
     expect(state.positionKm[0]).toBe(1800);
     expect(Math.round(state.velocityKmS)).toBe(1);
     expect(state.distanceToEarthKm).toBe(1800);
+    expect(state.earthMoonDistanceKm).toBe(384400);
+    expect(state.moonPositionKm[0]).toBe(384400);
     expect(state.distanceToMoonKm).toBeGreaterThan(382000);
   });
 

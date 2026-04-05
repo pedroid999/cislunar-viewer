@@ -1,0 +1,62 @@
+{
+  "missionId": "artemis-ii",
+  "generatedAt": "2026-04-05T11:20:00Z",
+  "frame": "J2000 / ICRF-compatible Earth-centered frame",
+  "coverage": {
+    "start": "2026-04-01T12:00:00Z",
+    "stop": "2026-04-13T12:00:00Z",
+    "stepSize": "2 h"
+  },
+  "kernels": [
+    {
+      "id": "naif0012",
+      "type": "LSK",
+      "source": "NAIF generic kernels",
+      "path": "lsk/naif0012.tls",
+      "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk/naif0012.tls",
+      "purpose": "Leap seconds for UTC↔TDB conversion.",
+      "committed": false
+    },
+    {
+      "id": "pck00011",
+      "type": "PCK",
+      "source": "NAIF generic kernels",
+      "path": "pck/pck00011.tpc",
+      "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc",
+      "purpose": "Planetary radii and orientation constants for Earth/Moon rendering.",
+      "committed": false
+    },
+    {
+      "id": "de440s",
+      "type": "SPK",
+      "source": "NAIF generic kernels",
+      "path": "spk/planets/de440s.bsp",
+      "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440s.bsp",
+      "purpose": "Solar-system barycentric ephemerides, used here for Earth/Moon geometry.",
+      "committed": false
+    },
+    {
+      "id": "moon_pa_de440_200625",
+      "type": "PCK",
+      "source": "NAIF generic kernels",
+      "path": "pck/moon_pa_de440_200625.bpc",
+      "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/moon_pa_de440_200625.bpc",
+      "purpose": "Binary lunar orientation kernel aligned with DE440.",
+      "committed": false
+    },
+    {
+      "id": "moon_de440_220930",
+      "type": "FK",
+      "source": "NAIF generic kernels",
+      "path": "fk/satellites/moon_de440_220930.tf",
+      "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/fk/satellites/a_old_versions/moon_de440_220930.tf",
+      "purpose": "Lunar frame specifications compatible with the DE440 lunar orientation kernels.",
+      "committed": false
+    }
+  ],
+  "notes": [
+    "This manifest is the SPICE-first contract for Artemis II body geometry and frame metadata.",
+    "The repo does not commit large kernel binaries yet; it tracks exact upstream NAIF artifacts and URLs for reproducible offline ingestion.",
+    "Artemis II spacecraft state vectors are still unavailable here, so the spacecraft path remains a documented hybrid model even though Earth/Moon geometry is aligned to NAIF kernel selection."
+  ]
+}

@@ -17,9 +17,11 @@ export interface MissionEvent {
 export interface InterpolatedState {
   timestamp: string;
   positionKm: Vector3;
+  moonPositionKm: Vector3;
   velocityKmS: number;
   distanceToEarthKm: number;
   distanceToMoonKm: number;
+  earthMoonDistanceKm: number;
   missionElapsedSeconds: number;
   nextEvent?: MissionEvent;
   lightTimeSeconds: number;
@@ -82,9 +84,11 @@ function deriveState(current: TrajectorySample, next: TrajectorySample, target: 
   return {
     timestamp: new Date(target).toISOString(),
     positionKm,
+    moonPositionKm,
     velocityKmS: magnitude(velocityVector),
     distanceToEarthKm,
     distanceToMoonKm,
+    earthMoonDistanceKm: magnitude(moonPositionKm),
     missionElapsedSeconds: Math.max(0, Math.round((target - missionStart) / 1000)),
     lightTimeSeconds: distanceToEarthKm / LIGHT_SPEED_KM_S
   };
